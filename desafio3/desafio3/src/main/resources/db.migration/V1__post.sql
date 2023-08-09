@@ -8,7 +8,9 @@ create table if not exists Post(
 create table if not exists Comment(
         id int not null primary key AUTO_INCREMENT,
         post_id int,
-        text varchar(1000),
+        name varchar(500),
+        email varchar(500),
+        body varchar(1000),
         foreign key (post_id) references post(id)
 );
 

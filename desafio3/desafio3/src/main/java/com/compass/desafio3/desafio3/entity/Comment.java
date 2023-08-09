@@ -20,9 +20,17 @@ public class Comment {
 
 
     @ManyToOne
-    private Post post;
+    private Post postId;
 
-    @Column(name = "text")
-    private String text;
+    @Column(name = "name")
+    private String name;
+
+    @Column(name = "email")
+    private String email;
+
+
+
+    @Column(name = "body")
+    private String body;
 
 }
