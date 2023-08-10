@@ -1,6 +1,6 @@
 create table if not exists Post(
         id int not null primary key AUTO_INCREMENT,
-        tittle VARCHAR(255),
+        title VARCHAR(255),
         body VARCHAR(1000),
         state varchar(20)
 );

@@ -22,8 +22,8 @@ public class Post {
     @Column(name = "id")
     private Long postId;
 
-    @Column(name = "tittle")
-    private String tittle;
+    @Column(name = "title")
+    private String title;
 
     @Column(name = "body")
     private String body;
@@ -35,6 +35,14 @@ public class Post {
     private List<Comment> comments;
 
 
+    @OneToMany(mappedBy = "post" ,cascade = CascadeType.ALL)
+    private List<History> histories;
+
+
+    public List<History> getHistory(){
+        return histories;
+    }
+
     public List<Comment> getComments(){
         return comments;
     }
@@ -42,6 +50,11 @@ public class Post {
     public void setComments(List<Comment> comments){
         this.comments = comments;
     }
+
+    public void setHistory(List<History> histories){
+        this.histories = histories;
+    }
+
 
 
 
