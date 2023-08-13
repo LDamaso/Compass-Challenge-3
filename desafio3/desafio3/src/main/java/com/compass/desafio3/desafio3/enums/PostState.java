@@ -1,5 +1,9 @@
 
 package com.compass.desafio3.desafio3.enums;
+
+
+
+
 public enum PostState {
     CREATED,
     POST_FIND,

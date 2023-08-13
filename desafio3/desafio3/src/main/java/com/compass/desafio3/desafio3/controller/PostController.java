@@ -36,54 +36,55 @@ public class PostController {
     private HistoryRepository historyRepository;
 
     @PostMapping("/{postId}")
-    public ResponseEntity<String> processPost(@PathVariable Long postId){
-            History history = new History();
-            String apiUrl = "https://jsonplaceholder.typicode.com/posts/" + postId;
-            Post post = restTemplate.getForObject(apiUrl, Post.class);
-            post.setState(PostState.CREATED);
-            postRepository.save(post);
-            if (postRepository.existsById(postId)){
-                return ResponseEntity.badRequest().body("Post already exists");
-            }
+    public ResponseEntity<String> processPost(@PathVariable Long postId) {
 
-            post.setState(PostState.POST_FIND);
-            postRepository.save(post);
+        if (postId < 1 || postId > 100) {
+            return ResponseEntity.badRequest().body("Invalid postId. It must be between 1 and 100.");
+        }
 
-            if (post == null){
-                return ResponseEntity.notFound().build();
-            }
 
-            post.setState(PostState.POST_OK);
-            postRepository.save(post);
+        if (postRepository.existsById(postId)) {
+            return ResponseEntity.badRequest().body("Post with id " + postId + " already exists.");
+        }
 
-            if (post.getState()==PostState.POST_OK) {
-                post.setState(PostState.COMMENTS_FIND);
-                String commentsApiUrl = "https://jsonplaceholder.typicode.com/comments?postId=" + postId;
-                Comment[] commentsArray = restTemplate.getForObject(commentsApiUrl, Comment[].class);
-                List<Comment> comments = Arrays.asList(commentsArray);
 
-                post.setComments(comments);
-                post.setState(PostState.COMMENTS_OK);
-                postRepository.save(post);
+        Post post = new Post();
+        post.setPostId(postId);
+        post.setState(PostState.CREATED);
 
-            }else {
-                post.setState(PostState.FAILED);
 
-                postRepository.save(post);
-            }
-            if(post.getState() == PostState.COMMENTS_OK){
-                post.setState(PostState.ENABLED);
-            }else {
-                post.setState(PostState.DISABLED);
-            }
-            history.setPost(post);
-            history.setState(post.getState());
-            history.setTimestamp(LocalDateTime.now());
-            historyRepository.save(history);
-        return ResponseEntity.ok("Post  Processing initiated");
+        postRepository.save(post);
+
+
+        String postApiUrl = "https://jsonplaceholder.typicode.com/posts/" + postId;
+        post = restTemplate.getForObject(postApiUrl, Post.class);
+
+        if (post == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+
+        post.setState(PostState.POST_FIND);
+
+
+        postRepository.save(post);
+
+
+        post.setState(PostState.POST_OK);
+        History history = new History();
+        history.setPost(post);
+        history.setState(post.getState());
+        history.setTimestamp(LocalDateTime.now());
+
+
+        historyRepository.save(history);
+
+        return ResponseEntity.ok("Post processing completed.");
     }
 
-    @DeleteMapping("/{postId}")
+
+
+    @DeleteMapping("/post/disable/{postId}")
     public ResponseEntity<String> disablePost(@PathVariable Long postId){
 
         if (postId < 1 || postId > 100) {
@@ -112,7 +113,7 @@ public class PostController {
     }
 
 
-    @PutMapping("/{postId}")
+    @PutMapping("/post/enable/{postId}")
     public ResponseEntity<String> reprocessPost(@PathVariable Long postId){
 
         if (postId < 1 || postId > 100) {

@@ -2,6 +2,8 @@ package com.compass.desafio3.desafio3;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.Bean;
+import org.springframework.web.client.RestTemplate;
 
 @SpringBootApplication
 public class Desafio3Application {
@@ -10,4 +12,8 @@ public class Desafio3Application {
 		SpringApplication.run(Desafio3Application.class, args);
 	}
 
+	@Bean
+	public RestTemplate restTemplate() {
+		return new RestTemplate();
+	}
 }
