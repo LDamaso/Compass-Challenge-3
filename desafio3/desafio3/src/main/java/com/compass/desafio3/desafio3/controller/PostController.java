@@ -1,6 +1,8 @@
 package com.compass.desafio3.desafio3.controller;
 
 
+import com.compass.desafio3.desafio3.dto.response.CommentDTO;
+import com.compass.desafio3.desafio3.dto.response.HistoryDTO;
 import com.compass.desafio3.desafio3.dto.response.PostResponse;
 import com.compass.desafio3.desafio3.entity.History;
 import com.compass.desafio3.desafio3.entity.Post;
@@ -15,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -49,7 +52,7 @@ public class PostController {
 
 
         Post post = new Post();
-        post.setPostId(postId);
+        post.setId(postId);
         post.setState(PostState.CREATED);
 
 
@@ -71,6 +74,7 @@ public class PostController {
 
 
         post.setState(PostState.POST_OK);
+        postRepository.save(post);
         History history = new History();
         history.setPost(post);
         history.setState(post.getState());
@@ -82,9 +86,81 @@ public class PostController {
         return ResponseEntity.ok("Post processing completed.");
     }
 
+    @PostMapping("/process-posts")
+    public ResponseEntity<String> processAllPosts() {
+        for (Long postId = 1L; postId <= 100L; postId++) {
+            processPost(postId);
+        }
+
+        return ResponseEntity.ok("Processing of all posts completed.");
+    }
+
+    @PostMapping("/{postId}/comments")
+    public ResponseEntity<String> processComments(@PathVariable Long postId) {
+
+        if (!postRepository.existsById(postId)) {
+            return ResponseEntity.notFound().build();
+        }
 
 
-    @DeleteMapping("/post/disable/{postId}")
+        Post post = postRepository.findById(postId).orElse(null);
+        if (post == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        String commentsApiUrl = "https://jsonplaceholder.typicode.com/comments?postId=" + postId;
+        Comment[] commentsArray = restTemplate.getForObject(commentsApiUrl, Comment[].class);
+        List<Comment> comments = Arrays.asList(commentsArray);
+
+
+        for (Comment comment : comments) {
+            comment.setPost(post);
+        }
+
+
+        commentRepository.saveAll(comments);
+
+
+        post.setState(PostState.COMMENTS_FIND);
+
+        post.setState(PostState.COMMENTS_OK);
+
+        postRepository.save(post);
+
+        if (post.getState() != PostState.COMMENTS_OK){
+            post.setState(PostState.FAILED);
+
+            postRepository.save(post);
+            post.setState(PostState.DISABLED);
+
+        }else {
+            post.setState(PostState.ENABLED);
+        }
+
+
+        History history = new History();
+        history.setPost(post);
+        history.setState(post.getState());
+        history.setTimestamp(LocalDateTime.now());
+        historyRepository.save(history);
+
+        return ResponseEntity.ok("Comments processing completed for post with ID " + postId);
+    }
+
+
+    @PostMapping("/process-comments")
+    public ResponseEntity<String> processAllComments() {
+        List<Post> posts = postRepository.findAll();
+        for (Post post : posts) {
+            processComments(post.getId());
+        }
+
+        return ResponseEntity.ok("Processing of comments for all posts completed.");
+    }
+
+
+
+    @DeleteMapping("/disable/{postId}")
     public ResponseEntity<String> disablePost(@PathVariable Long postId){
 
         if (postId < 1 || postId > 100) {
@@ -113,7 +189,7 @@ public class PostController {
     }
 
 
-    @PutMapping("/post/enable/{postId}")
+    @PutMapping("/enable/{postId}")
     public ResponseEntity<String> reprocessPost(@PathVariable Long postId){
 
         if (postId < 1 || postId > 100) {
@@ -141,16 +217,53 @@ public class PostController {
 
         historyRepository.save(history);
 
+        post.setState(PostState.ENABLED);
+        postRepository.save(post);
+
+        history.setPost(post);
+        history.setState(post.getState());
+        history.setTimestamp(LocalDateTime.now());
+
         return ResponseEntity.ok("Post reprocessed");
     }
 
-    @GetMapping
-    public ResponseEntity<List<PostResponse>> queryPosts(){
+    @GetMapping("/query")
+    public ResponseEntity<List<PostResponse>> queryPosts() {
         List<Post> posts = postRepository.findAll();
-        List<PostResponse> postResponses = PostResponse.fromPosts(posts);
+        List<PostResponse> result = new ArrayList<>();
 
+        for (Post post : posts) {
+            PostResponse postResponse = new PostResponse();
+            postResponse.setId(post.getId());
+            postResponse.setTitle(post.getTitle());
+            postResponse.setBody(post.getBody());
+            postResponse.setState(post.getState());
 
-        return  ResponseEntity.ok(postResponses);
+            List<Comment> comments = commentRepository.findByPost(post);
+            List<CommentDTO> commentDTOs = new ArrayList<>();
+            for (Comment comment : comments) {
+                CommentDTO commentDTO = new CommentDTO();
+                commentDTO.setId(comment.getId());
+                commentDTO.setBody(comment.getBody());
+                commentDTOs.add(commentDTO);
+            }
+            postResponse.setComments(commentDTOs);
+
+            List<History> histories = historyRepository.findByPost(post);
+            List<HistoryDTO> historyDTOs = new ArrayList<>();
+            for (History history : histories) {
+                HistoryDTO historyDTO = new HistoryDTO();
+                historyDTO.setId(history.getId());
+                historyDTO.setDate(history.getTimestamp());
+                historyDTO.setState(history.getState());
+                historyDTOs.add(historyDTO);
+            }
+            postResponse.setHistory(historyDTOs);
+
+            result.add(postResponse);
+        }
+
+        return ResponseEntity.ok(result);
     }
 
 

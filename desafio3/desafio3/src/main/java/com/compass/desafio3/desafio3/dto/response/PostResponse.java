@@ -23,25 +23,10 @@ public class PostResponse {
     private String title;
     private String body;
     private PostState state;
-    private List<Comment> comments;
-    private List<History> history;
 
-    public static List<PostResponse> fromPosts(List<Post> posts) {
-        List<PostResponse> postResponses = new ArrayList<>();
+    private List<CommentDTO> comments;
+    private List<HistoryDTO> history;
 
-        for (Post post : posts) {
-            PostResponse postResponse = new PostResponse();
-            postResponse.setId(post.getPostId());
-            postResponse.setTitle(post.getTitle());
-            postResponse.setBody(post.getBody());
-            postResponse.setState(post.getState());
-            postResponse.setComments(post.getComments());
-            postResponse.setHistory(post.getHistory());
 
-            postResponses.add(postResponse);
-        }
-
-        return postResponses;
-    }
 
 }

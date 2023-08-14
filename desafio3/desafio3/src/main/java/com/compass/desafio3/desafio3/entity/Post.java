@@ -20,7 +20,7 @@ public class Post {
     @Id
     @Column(name = "id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long postId;
+    private Long id;
 
     @Column(name = "title")
     private String title;
@@ -30,31 +30,6 @@ public class Post {
 
     @Enumerated(EnumType.STRING)
     private PostState state;
-
-    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL)
-    private List<Comment> comments;
-
-
-    @OneToMany(mappedBy = "post" ,cascade = CascadeType.ALL)
-    private List<History> histories;
-
-
-    public List<History> getHistory(){
-        return histories;
-    }
-
-    public List<Comment> getComments(){
-        return comments;
-    }
-
-    public void setComments(List<Comment> comments){
-        this.comments = comments;
-    }
-
-    public void setHistory(List<History> histories){
-        this.histories = histories;
-    }
-
 
 
 

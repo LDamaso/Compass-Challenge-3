@@ -23,8 +23,9 @@ public class History {
     @ManyToOne
     private Post post;
 
-    @Column(name = "state")
+    @Enumerated(EnumType.STRING)
     private PostState state;
+
 
     @Column(name = "timestamp")
     private LocalDateTime timestamp;

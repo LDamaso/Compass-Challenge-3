@@ -1,11 +1,12 @@
 package com.compass.desafio3.desafio3.entity;
 
 
+import com.compass.desafio3.desafio3.enums.PostState;
 import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "comment")
+@Table(name = "Comment")
 @Getter
 @Setter
 @AllArgsConstructor
@@ -15,12 +16,11 @@ public class Comment {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
     private Long id;
 
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "post_id")
+    @JoinColumn(name = "Post_id")
     private Post post;
 
     @Column(name = "name")
@@ -28,6 +28,7 @@ public class Comment {
 
     @Column(name = "email")
     private String email;
+
 
 
 
